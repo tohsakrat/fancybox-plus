@@ -1,0 +1,139 @@
+@import (inline) "fancybox.css";
+@import (inline) "carousel.css";
+@import (inline) "panzoom.css";
+@import (inline) "panzoom.controls.css";
+
+.Post-body a[data-fancybox]:hover,details:not([open]):hover,a.LinkPreview:hover {
+z-index:1;
+    transform: translate(0px, -5px) scale(1.01);
+    transition: .25s;
+}
+.Post-body a[data-fancybox] {
+position: relative;
+    transition: .1s;
+}
+a[data-fancybox]:hover>img {
+    box-shadow: 0px 0px 15px var(--header-control-color);
+}
+a[data-fancybox]>img {
+ margin-bottom: -10px;
+    border: 5px solid var(--header-control-color);
+    box-shadow: -3px -3px 8px var(--header-control-color);
+    position: relative;
+}
+.Post-body a[data-fancybox]:hover,details:not([open]):hover,a.LinkPreview:hover {
+z-index:1;
+    transform: translate(0px, -5px) scale(1.01);
+    transition: .25s;
+}
+.Post-body a[data-fancybox] {
+position: relative;
+    transition: .1s;
+}
+a[data-fancybox]:hover>img {
+    box-shadow: 0px 0px 15px var(--header-control-color);
+}
+a[data-fancybox]>img {
+ margin-bottom: -10px;
+    border: 5px solid var(--header-control-color);
+    box-shadow: -3px -3px 8px var(--header-control-color);
+    position: relative;
+}
+.Post-body a[data-fancybox]:hover,details:not([open]):hover,a.LinkPreview:hover {
+z-index:1;
+    transform: translate(0px, -5px) scale(1.01);
+    transition: .25s;
+}
+.Post-body a[data-fancybox] {
+position: relative;
+    transition: .1s;
+}
+a[data-fancybox]:hover>img {
+    box-shadow: 0px 0px 15px var(--header-control-color);
+}
+a[data-fancybox]>img {
+ margin-bottom: -10px;
+    border: 5px solid var(--header-control-color);
+    box-shadow: -3px -3px 8px var(--header-control-color);
+    position: relative;
+}
+
+
+*:is(.item-excerpt,.item-excerptM) .Button.chat-a:not([data-fancybox])>img:not(.emoji):not(.flaemoji-customized), *:is(.item-excerpt,.item-excerptM) .Button.chat-b:not([data-fancybox])>img:not(.emoji):not(.flaemoji-customized) {
+    margin-top: -12px;
+    margin-bottom: -17px;
+}
+
+
+.has-image[data-image-fit=contain] .fancybox__image {
+    pointer-events: none;
+}
+
+a[data-fancybox]>img {
+    pointer-events: none;
+}
+
+
+.fancybox__container {
+    z-index: 3000
+}
+
+
+.Post-body br + a[data-fancybox] ,.Post-body br + img:not(.emoji) {
+    margin-top: -0.3em !important;
+    margin-bottom: 0.8em !important;
+    display: block;
+}
+
+.Post-body span.fromBR + a[data-fancybox] ,.Post-body span.fromBR + img:not(.emoji) {
+    margin-top: -1.3em !important;
+    margin-bottom: -.2em !important;
+    display: block;
+}
+
+.Post-body :is(ul,ol) br + a[data-fancybox],.Post-body :is(ul,ol) br + img:not(.emoji) {
+    margin-top: -0em !important;
+    margin-bottom: 0.8em !important;
+    display: block;
+    margin-left: 0em;
+    display: block;
+}
+
+a[data-fancybox]:after {
+    display: block;
+    content: '\f00e' !important;
+    font-family: 'Font Awesome 5 Free';
+    position: absolute;
+    left:1em;
+    transform: translate(0, -2em);
+    text-shadow: 0 0 5px white;
+
+}
+
+.Post-body a[data-fancybox] {
+    border-radius: ~"calc(var(--border-radius) + 4px)";
+    margin-left: 2em;
+    display: block;
+    border-width: 3px;
+    overflow: visible;
+}
+
+
+
+.Post-body *:not([data-fancybox])>img:not(.emoji):not(.flaemoji-customized) {
+    margin-left: 0em!important;
+    display: block;
+}
+
+.Post-body ol *:not([data-fancybox])>img:not(.emoji):not(.flaemoji-customized) {
+    margin: 0em!important;
+    margin-top: .5em!important;
+    margin-bottom: .5em!important;
+    display: block;
+}
+
+
+.Post-body .LinkPreview a[data-fancybox] {
+    display: none!important
+}
+
