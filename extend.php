@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of tohsakarat/table-of-content
+ * This file is part of iamdarkle/fancybox
  *
  * Copyright (c) 2022 Tomás Romero.
  *
@@ -10,21 +10,9 @@
  */
 
 use Flarum\Extend;
-use s9e\TextFormatter\Configurator;
+
 return [
     (new Extend\Frontend('forum'))
         ->js(__DIR__.'/js/dist/forum.js')
         ->css(__DIR__ . '/less/forum.less'),
-        
-	
-	    (new Extend\Formatter)
-        ->configure(function (Configurator $config) {
-            $config->BBCodes->addCustom(
-        '[anchor="{TEXT}"]',
-        '<div class="div-anchor">
-        <span id={TEXT} class="anchor"></span> 
-        <span id={TEXT} class="sub-anchor">{TEXT}</span> 
-         </div>'
-    );
-        })
 ];
