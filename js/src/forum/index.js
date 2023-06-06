@@ -38,8 +38,8 @@ app.initializers.add('darkle/fancybox', () => {
       console.log('fancybox initializePost')     
       
           var elements1=Array.prototype.slice.call(this.element.querySelectorAll('img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview])'))
-          var elements2=Array.prototype.slice.call(this.element.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview])'))
-    
+          var elements2=Array.prototype.slice.call(this.element.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]), .editing img'))
+
             elements1=elements1.filter((e) =>{
             return elements2.indexOf(e) == -1 
     
@@ -59,8 +59,8 @@ app.initializers.add('darkle/fancybox', () => {
             node.setAttribute('transed', 'true');  
         
           if(
-        this.attrs.post.data.attributes.number <Math.floor(app.current.data.stream.index-1)+1
-          &&this.attrs.post.data.attributes.number <Math.floor(app.current.data.stream.index-1)-1
+          this.attrs.post.data.attributes.number <Math.floor(app.current.data.stream.index-1)+1
+          &&this.attrs.post.data.attributes.number <Math.floor(app.current.data.stream.index-1)-1 
           ){
               //符合条件的加fancybx
             const fancyboxEl = document.createElement('a');
@@ -87,11 +87,10 @@ app.initializers.add('darkle/fancybox', () => {
          var elements1=Array.prototype.slice.call(document.querySelectorAll(
          '.PostStream-item[data-index="'+Math.floor(app.current.data.stream.index-1) +'"] '+selector+','+
             '.PostStream-item[data-index="'+(Math.floor(app.current.data.stream.index-1)-1)+'"] '+selector+','+
-            '.PostStream-item[data-index="'+(Math.floor(app.current.data.stream.index-1)+1) +'"] '+selector+','+
-            ' .editing '+selector
+            '.PostStream-item[data-index="'+(Math.floor(app.current.data.stream.index-1)+1) +'"] '+selector
         ))
         
-      var elements2=Array.prototype.slice.call(document.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview])'))
+      var elements2=Array.prototype.slice.call(document.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]), .editing img'))
       
        elements1=elements1.filter((e) =>{
         return elements2.indexOf(e) == -1 
