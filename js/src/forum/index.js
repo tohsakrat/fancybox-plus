@@ -38,8 +38,10 @@ app.initializers.add('darkle/fancybox', () => {
       console.log('fancybox initializePost')     
       
           var elements1=Array.prototype.slice.call(this.element.querySelectorAll('img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview])'))
+          if(!elements1)return;
           var elements2=Array.prototype.slice.call(this.element.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]), .editing img'))
-
+            
+            
             elements1=elements1.filter((e) =>{
             return elements2.indexOf(e) == -1 
     
@@ -49,6 +51,13 @@ app.initializers.add('darkle/fancybox', () => {
             elements1.forEach((node) => {
               node.setAttribute('data-src',  node.getAttribute('src'));
                node.setAttribute('alt',  'loading');
+               node.addEventListener("click",()=>{
+                   if(!node.getAttribute('src')){
+                        node.setAttribute('src', node.getAttribute('data-src') );  
+                   }
+                   
+               })
+               
              });
              
              
@@ -57,11 +66,40 @@ app.initializers.add('darkle/fancybox', () => {
            elements1.forEach((node) => {
                
             node.setAttribute('transed', 'true');  
+            
+            console.log('设置fancybox - src 楼层'+ this.attrs.post.data.attributes.number)
+        console.log('当前 楼层'+ Math.floor(app.current.data.stream.index-1))
+        console.log(this);
+        
+        let visibleIndex;//当屏幕不可滚动时，最大可见post
+        let tempI;//一个计数器
+        let tempSum=0;//一个累加器
+        let postStreamDom=Array.prototype.slice.call(document.querySelector('.PostStream').children);
+        for(tempI=0;tempI<postStreamDom.length;tempI++){
+            tempSum+=postStreamDom[tempI].offsetHeight;
+            visibleIndex=postStreamDom[tempI].dataset.index+1;//楼层计数钟第0层属于Hero，不算Stream,所以要在streamIndex上+1
+            if(tempSum>window.innerHeight)break;
+            
+        }
+        
+        
+        
+        //console.log(visibleIndex)
         
           if(
-          this.attrs.post.data.attributes.number <Math.floor(app.current.data.stream.index-1)+1
-          &&this.attrs.post.data.attributes.number <Math.floor(app.current.data.stream.index-1)-1 
+              
+         (
+          ( ( app.current.data.stream.index-1)<1)    
+          &&(this.attrs.post.data.attributes.number<=visibleIndex)
+          
+          )
+           
+           
+             ||
+          (this.attrs.post.data.attributes.number < Math.floor(app.current.data.stream.index-1)+1
+          &&this.attrs.post.data.attributes.number >Math.floor(app.current.data.stream.index-1)-1 )
           ){
+               console.log('判定第一批fancybox - src 楼层'+ this.attrs.post.data.attributes.number)
               //符合条件的加fancybx
             const fancyboxEl = document.createElement('a');
             fancyboxEl.setAttribute('data-fancybox', 'responsive');
@@ -82,6 +120,7 @@ app.initializers.add('darkle/fancybox', () => {
 
      window.updateFancyboxLazyLoad=()=>{
          if(!app.current.data.stream)return;
+         
          var selector='img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]):not([isFancy])'
          
          var elements1=Array.prototype.slice.call(document.querySelectorAll(
@@ -89,8 +128,10 @@ app.initializers.add('darkle/fancybox', () => {
             '.PostStream-item[data-index="'+(Math.floor(app.current.data.stream.index-1)-1)+'"] '+selector+','+
             '.PostStream-item[data-index="'+(Math.floor(app.current.data.stream.index-1)+1) +'"] '+selector
         ))
-        
+        if(!elements1)return;
       var elements2=Array.prototype.slice.call(document.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]), .editing img'))
+      
+       
       
        elements1=elements1.filter((e) =>{
         return elements2.indexOf(e) == -1 
