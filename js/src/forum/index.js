@@ -1,436 +1,234 @@
-import app from 'flarum/forum/app';
-import  { extend, override } from 'flarum/common/extend';
+import app from  'flarum/forum/app';
+import  { extend, override }  from 'flarum/common/extend';
+//import CommentPost from 'flarum/forum/components/CommentPost';
+
 import CommentPost from 'flarum/forum/components/CommentPost';
-import DiscussionPage from 'flarum/forum/components/DiscussionPage';
-import DiscussionPageResolver from 'flarum/forum/resolvers/DiscussionPageResolver';
-import PostStreamScrubber from 'flarum/forum/components/PostStreamScrubber';
-import PostStream from 'flarum/forum/components/PostStream';
+//import PostsUserPage from 'flarum/forum/components/PostsUserPage';
+import { Fancybox } from '@fancyapps/ui';
+//import DiscussionsUserPage from 'flarum/forum//components/DiscussionsUserPage';
+app.initializers.add('tohsakarat-fancybox-plus', () => {
+    
+ 
+ 
+  //console.log('fancybox initializeAll')
 
-app.initializers.add('table-of-content', () => {
 
-  extend(CommentPost.prototype, 'oncreate', function () {
-      if(!document.querySelector('.PostStream') )return;
-    //console.log(this);
-    let clearPunctuation=(str)=>{;
-      let reg=new RegExp( /[\x21-\x2f\x3a-\x40\x5b-\x60\x7B-\x7F]/)
-      return str.replace( reg ,'-').replaceAll(' ','-');
-  }
+      //--------------------------贴内fancybox--------------------------
+      
+     Fancybox.defaults.Image = { zoom: false };
 
- //这一段母的是把页面内指向同一个discussion的链接改为跳转到楼层，这样就不用重载整个页面
-  let inPageLink=Array.prototype.slice.call(this.element.querySelectorAll('.Post-body a'))
+     extend(CommentPost.prototype, 'refreshContent', function (vnode) {
+         
+      //console.log('fancybox initializePost')     
+      
+      //---------获取设置--------
+     // console.log("app")
+    //  console.log(app)
+    //  console.log("forum")
+     // console.log(app.forum)
+      let cdnUrl = app.forum.attribute('tohsakarat-fancybox-plus.pic-cdnUrl');
+      let useCdn = app.forum.attribute('tohsakarat-fancybox-plus.use-cdnUrl');
+      let useResize = app.forum.attribute('tohsakarat-fancybox-plus.use-resize');
+    //  console.log("fancybox获取设置完成")
+      //--------------------------给所有符合增加fancybox条件的帖子设置data-src--------------------------
+      //注意排除掉已经有fancy或者已经设置过data-src的图片
+
+        //所有符合条件的图片
+          var elements1=Array.prototype.slice.call(this.element.querySelectorAll('img:not([data-src]):not([isfancy]):not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview])'))
+          
+        //应当被排除的图片，主要是涉及到折叠等逻辑，用户希望隐藏的
+          var elements2=Array.prototype.slice.call(this.element.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]), .editing img'))
+
+            elements1=elements1.filter((e) =>{return elements2.indexOf(e) == -1 } )//排除不应该被加fancy的图片
+            if(!elements1.length)return;
+           // console.log('=====fancybox设置=====')
   
-     inPageLink.forEach((e)=>{
-      let curDiscussionRoute=window.location.href.replace("https://",'').split('/').splice(0,3).join('/');
-      if(e.href.indexOf(curDiscussionRoute)!=-1)e.onclick=(w)=>{
-        //如果链接指向的是当前页面的同一个discussion，就不要重载页面了
-        let goTo=e.href.split('/')[5].split('#')[0];
-        console.log('点击了链接,即将前往楼层'+goTo);
-        w.preventDefault();  
-        if(window.location.href.split('/')[5].split('#')[0]==goTo){
-          //如果和当前所在楼层相同，就不要滚动了
-          console.log('当前所在楼层和目标楼层相同，不滚动');
-          window.location.hash  =  '#'+ e.href.split('#')[1];
-        return;}
-        app.current.data.stream.goToNumber(goTo).then(()=>{
-                console.log('goto完毕');
+           // console.log(this.element)
+            //给所有图片存一下src
+            elements1.forEach((node) => {
+
+              let originalSrc=node.getAttribute('src');//去掉https
+
+
+              //检查是否符合url替换条件
+              function checkUrl(url) {
+                const mainDomain = window.location.origin; // 获取当前主域名，包含协议
+                const absolutePathPattern = new RegExp(`^${mainDomain}/assets/`); // 生成绝对路径的正则表达式
+                const relativePathPattern = /^\/assets\//; // 生成相对路径的正则表达式
               
-    		  if(e.href.split('/')[5])setTimeout(
-    		  ()=>{
-    		      //多延迟下放图片加载下
-                    window.location.hash  =  '#'+ e.href.split('#')[1];
-                    setTimeout(()=>{ m.redraw();
-                     setTimeout(
-                         //再尝试一次，以防万一
-                         ()=>{
-                              window.location.hash  =  '#'+ e.href.split('#')[1];
-                         },500
-                    )
-                        
-                        
-                    },100)
-    		  },500)}
-      	)
-      return false;
-      
-      }
-    
-    
-    })
- 
- 
- //这一段开始，是生成目录
-
- //先把所有标题找出来
-  let elements1=Array.prototype.slice.call(this.element.querySelectorAll('.Post-body :is(h1, h2, h3, h4, h5, h6,.div-anchor)'))
-  
-  elements1.forEach((e,i)=>{
-    //这一段是给标题加上锚点，以及给锚点加上id
-    //不直让标题本身作为滚动id是因为，这样不会让标题本身滚动到屏幕中间，而是顶部
-    let anchor=e
-    while(1){
-      anchor = anchor.parentNode
-      if(anchor.dataset.number)break
-    }
-    
-    
-    e.innerHTML='<span class="title-anchor"></span>'+ '<span class="title-sub-anchor">'+ e.innerHTML+'</span>'; 
-  //加个点击引导
-    let icon = document.createElement('i');
-    icon.className='icon fas fa-up-right-from-square Button-icon';
-    e.appendChild(icon);
-    e.dataset.id=   anchor.dataset.number+'-'+clearPunctuation(e.innerText)+'-'+(elements1.map(k=>clearPunctuation(k.innerText)).filter(b=>b==clearPunctuation(e.innerText)).length==1?'':i);
-    
-    e.dataset.id= e.dataset.id.length > 10 ? e.dataset.id.substring(0, 10) : e.dataset.id
-    e.dataset.id=encodeURI(e.dataset.id)
-
-    e.className+=' title-has-anchor';
-    e.querySelector('.title-anchor').id = e.dataset.id;
-    e.querySelector('.title-sub-anchor').id = e.dataset.id;
-   
-  })
-
-  //这一段是生成目录
-  this.catalog={}
-  this.catalog.id=this.attrs.post.data.id
-  app.current.data.stream.posts().find(u=>u?.data?.id== this.catalog.id).catalog=this.catalog
-  //把目录加到stream数据模型对应的post里面去
-  
-  this.catalog.elements=elements1
-
-  this.catalog.content=this.catalog.elements.map(
-      (e)=>{
-        //这一段是通过标题数组的数据模型，生成目录的html
-        let isAnchor=Array(e.classList).map(e=>e.value).indexOf('sub-anchor')!=-1
-        let id=isAnchor? e.id : e.dataset.id
-        let link= window.location.origin+app.route.discussion(app.current.data.discussion,this.attrs.post.data.attributes.number)+'#'+id;
-        
-        e.addEventListener('click',()=>{
-            window.copyTextToClipboard('* ['+e.innerText+']('+link+')')
-        });//点击元素，复制链接
-        
-        let a=<p> <a
-        href={link}
-        target='_self'
-        data-number={this.attrs.post.data.attributes.number}
-        data-isAnchor={isAnchor}
-        data-id={id}
-        data-tag={e.tagName}
-        onclick={(u)=>{  
-
-          u.preventDefault();
-           app.current.data.stream.goToNumber(this.attrs.post.data.attributes.number).then(()=>{
-              setTimeout(()=>{
-                //console.log(a)
-              window.location.hash  =  '#'+  id;
-                
-               setTimeout(()=>{ m.redraw();},100)
-            },500)}
-            )
-            return false;
-          }
-        }
-        >{e.innerText+'\n'}</a></p>
-
-        return a;
-      }
-      )
-      
-
-    }); 
-
-
-    extend(PostStreamScrubber.prototype, 'view', function (vnode){
-      // if(app.current.data.stream.posts().filter((w)=>{return w.attributes.number==this.attrs.post.data.attributes.number})[0])app.current.data.stream.posts().filter((w)=>{return w.attributes.number==this.attrs.post.data.attributes.number})[0].catalog=this.catalog
-
-      if(!app.current)return;
-      //这一段是把滚动元素添加页面上
-        try{
-            
-            
-         if(app.current?.data?.stream?.posts().find(
-                 u=>
-                    u?.data?.id==app?.current?.data?.stream?.posts()[
-                     Math.floor(app.current.data.stream.index-app.current.data.stream.visibleStart)-1>0?Math.floor(app.current.data.stream.index-app.current.data.stream.visibleStart)-1:0]?.data?.id
-                 )?.catalog?.content.length
-             ){ 
-                    vnode.children.push(
-                    <div class='catalog-icon-mobile'
-                    onclick={()=>{document.querySelector('.PostStreamScrubber.Dropdown.App-titleControl>button.Button.Dropdown-toggle:first-child').click()}}
-                    ></div>
-                    )
-            
-            }
-        
-        vnode.children.push(
-            <div class='catalog-top'>
-                {
-                    //确认到底要不要目录
-                     app.current.data.stream.progress&& app.current.data.stream.currentPostElement&&
-                    (app.current.data.stream.progress>100-app.current.data.stream.percentScreenPost||
-                    app.current.data.stream.currentPostElement.scrollHeight<window.innerHeight)
-                    ?
-                    ""
-                    :
-                    app?.current?.data?.stream?.posts().find(
-                    u=>u?.data?.id==app.current?.data?.stream?.posts()[Math.floor(app.current?.data?.stream?.index-app.current?.data?.stream?.visibleStart)-1>0?Math.floor(app.current?.data?.stream?.index-app.current?.data?.stream?.visibleStart)-1:0]?.data?.id)
-                   ?.catalog?.content
-                    
+                // 检查绝对路径或相对路径
+                if (absolutePathPattern.test(url) || relativePathPattern.test(url)) {
+                  return true; // 如果URL符合条件，判断为真
                 }
-    
-            </div>
-        )
+              
+                return false; // 否则判断为假
+              }
+              let dataSrc,previewSrc;
+              
+              // 如果符合条件，替换为cdnUrl
+              if (checkUrl(originalSrc) && useCdn ) {
+                
+                dataSrc =  "//"+ cdnUrl + originalSrc.replace(window.location.origin,'')
+              
+              }else{
+                  dataSrc = originalSrc;
+              }
+
+            // 如果符合条件，替换为cdnUrl
+            if (useResize ) {
+                previewSrc = originalSrc.replace(/(\.jpg|\.png)$/i, '.medium$1')
+
+            }else{
+                previewSrc = originalSrc;
+              }
+
+
+
+              node.setAttribute('data-src', dataSrc);
+               node.setAttribute('alt',  'loading');
+               node.setAttribute('src' ,  previewSrc)
+               node.setAttribute('loading' , 'lazy');
+                node.setAttribute('importantce' , 'low');
+                node.setAttribute('decoding' , 'async');
+          
+             });
+             
+             
+             
+             
+             
+             
+            //--------处理第一次进入帖子，
+             let visibleIndex;//当屏幕不可滚动时，最大可见post
+             let tempI;//一个计数器
+             let tempSum=0;//一个累加器
+             
+             if(document.querySelector('.PostStream')){
+                         //保证是在贴子里
+                         let postStreamDom=Array.prototype.slice.call(document.querySelector('.PostStream').children);
+                        for(tempI=0;tempI<postStreamDom.length;tempI++){
+                            if(!(( app.current.data.stream.index-1)<1))break;  
+                            tempSum+=postStreamDom[tempI].offsetHeight;
+                            visibleIndex=postStreamDom[tempI].dataset.index+1;//楼层计数钟第0层属于Hero，不算Stream,所以要在streamIndex上+1
+                            if(tempSum>window.innerHeight)break;   
+                        }     
+                        
+                   // 给第一批图片设置src,当前的帖子和前后两个帖子
+                       
+                       elements1.forEach((node) => {
+                           
+                            node.setAttribute('transed', 'true');  
+        
+        
+                        //如果帖子是在0层，执行可见范围判断
+                        //如果帖子不在0层，执行前后两个帖子判断
+                            if(
+                            (
+                            ( ( app.current.data.stream.index-1)<1)    
+                            &&(this.attrs.post.data.attributes.number<=visibleIndex)
+                          
+                            )
+                              ||
+                            (this.attrs.post.data.attributes.number < Math.floor(app.current.data.stream.index-1)+1
+                            &&this.attrs.post.data.attributes.number >Math.floor(app.current.data.stream.index-1)-1 )
+                            ){
             
             
-        }catch (e){
-            console.log(e)
-        }
-        //console.log( app.current.data.stream.posts().find(u=>u.data.id==app.current.data.stream.posts()[Math.floor(app.current.data.stream.index-app.current.data.stream.visibleStart)].data.id).catalog?.content)
-           
-       return vnode
- 
- 
-       })
-       
-      // m.redraw()
-  
-      override(DiscussionPageResolver.prototype, 'onmatch', function (original, args, requestedPath, route){
-        
-      //这一端是为了阻止有id时flarum原生的滚动
-      if (app.current.matches(DiscussionPage) && this.canonicalizeDiscussionSlug(args.id) === this.canonicalizeDiscussionSlug(m.route.param('id'))) {
-        // By default, the first post number of any discussion is 1
-       if(args.near!=m.route.param('near') || window.location.href.indexOf('#')==-1 )DiscussionPageResolver.scrollToPostNumber = args.near || 1;//在贴在路由不变情况下不要滚回开头
-
-      }
-      
-      
-      return this.__proto__.__proto__.onmatch.call(this, args, requestedPath, route);
-    })
-
-    override(DiscussionPageResolver.prototype, 'render', function (original, vnode){
-      if (DiscussionPageResolver.scrollToPostNumber !== null) {
-        const number = DiscussionPageResolver.scrollToPostNumber;
-        // Scroll after a timeout to avoid clashes with the render.
-        
-       if(DiscussionPageResolver.scrollToPostNumber!=m.route.param('near')|| window.location.href.indexOf('#')==-1 ) setTimeout(() => app.current.get('stream').goToNumber(number));//在贴在路由不变情况下不要滚回开头
-        
-  
-        DiscussionPageResolver.scrollToPostNumber = null;
-      }
-  
-      return this.__proto__.__proto__.render.call(this,vnode);
-    })
-
-
-
-
-     extend(DiscussionPage.prototype, 'show', function (discussion){
-         
-         if(window.location.href.indexOf('#')!=-1 && window.location.href.split('#').length==2){
-            let hash= window.location.hash;
-          setTimeout(()=>{
-          window.location.hash  =   hash;
-          },250)
-          setTimeout(()=>{
-          window.location.hash  =   hash;
-          },500)
-          }
-         
-         
-     })
-
-    override(DiscussionPage.prototype, 'render', function (original,discussion){
-          app.history.push('discussion', discussion.title());
-          app.setTitle(discussion.title());
-          app.setTitleCount(0);
-          console.log('DiscussionPage-overide')
-          // When the API responds with a discussion, it will also include a number of
-          // posts. Some of these posts are included because they are on the first
-          // page of posts we want to display (determined by the `near` parameter) –
-          // others may be included because due to other relationships introduced by
-          // extensions. We need to distinguish the two so we don't end up displaying
-          // the wrong posts. We do so by filtering out the posts that don't have
-          // the 'discussion' relationship linked, then sorting and splicing.
-          let includedPosts = [];
-          if (discussion.payload && discussion.payload.included) {
-            const discussionId = discussion.id();
-      
-            includedPosts = discussion.payload.included
-              .filter(
-                (record) =>
-                  record.type === 'posts' &&
-                  record.relationships &&
-                  record.relationships.discussion &&
-                  !Array.isArray(record.relationships.discussion.data) &&
-                  record.relationships.discussion.data.id === discussionId
-              )
-              // We can make this assertion because posts should be in the store,
-              // since they were in the discussion's payload.
-              .map((record) => app.store.getById('posts', record.id) )
-              .sort((a, b) => a.number() - b.number())
-              .slice(0, 20);
-          }
-      
-          // Set up the post stream for this discussion, along with the first page of
-          // posts we want to display. Tell the stream to scroll down and highlight
-          // the specific post that was routed to.
-          this.stream = new PostStreamState(discussion, includedPosts);
-          const rawNearParam = m.route.param('near');
-          const nearParam = rawNearParam === 'reply' ? 'reply' : parseInt(rawNearParam);
-        
-          this.stream.goToNumber(nearParam || (includedPosts[0]?.number() ?? 0), true).then(() => {
-            this.discussion = discussion;
-      
-            app.current.set('discussion', discussion);
-            app.current.set('stream', this.stream);
-            
-          if(window.location.href.indexOf('#')!=-1 && window.location.href.split('#').length==2){
-          let hash=window.location.href.split('#')[1]
-          
-          setTimeout(()=>{
-          window.location.hash  =   '#'+hash;
-          },300)
-          setTimeout(()=>{
-          window.location.hash  =   '#'+hash;
-          },1000)
-          }
-          
-          
-          
-          });
-      
-      
-  
-    })
-
-
-    /**
-   * When the posts that are visible in the post stream change (i.e. the user
-   * scrolls up or down), then we update the URL and mark the posts as read.
-   */
-
-    override(DiscussionPage.prototype, 'positionChanged', function(original,startNumber, endNumber){
-        const discussion = this.discussion;
-    
-        if (!discussion) return;
-    
-        // Construct a URL to this discussion with the updated position, then
-        // replace it into the window's history and our own history stack.
-        const url = app.route.discussion(discussion, (this.near = startNumber))+(window.location.hash.substr(1).split('-')[0]==this.near?window.location.hash:'');
-    
-        window.history.replaceState(null, document.title, url);
-        app.history.push('discussion', discussion.title());
-    
-        // If the user hasn't read past here before, then we'll update their read
-        // state and redraw.
-        if (app.session.user && endNumber > (discussion.lastReadPostNumber() || 0)) {
-          discussion.save({ lastReadPostNumber: endNumber });
-          m.redraw();
-        }
-  });
-  
-  
-  
-
-    //这一段开始是给帖子加进度条
-    window.updateCatalogTop=()=>{
-    if(!app?.current?.data?.stream?.index)return;
-     let footer = document.querySelector( '.PostStream-item[data-index="'+Math.floor(app?.current?.data?.stream?.index-1) +'"]'+" li.item-progress")
-     app.current.data.stream.progress=Math.floor((app.current.data.stream.index-Math.floor(app.current.data.stream.index))*100) 
-     if(!footer)return;
-     footer.innerText= Math.floor(app.current.data.stream.progress+ app.current.data.stream.percentScreenPost/3)+'%'  
-      m.redraw();
-      
+                          //符合条件的加fancybx
+                            const fancyboxEl = document.createElement('a');
+                            fancyboxEl.setAttribute('data-fancybox', 'responsive');
+                            fancyboxEl.setAttribute('data-src', node.getAttribute('data-src') || node.getAttribute('src'));
+                            $(node).wrap(fancyboxEl);
+                            node.setAttribute('isFancy', 'true');  
+                            
+                           node.setAttribute('loading' , 'eager');
+                            node.setAttribute('importantce' , 'medium');
+                                      
+                          }else{
+                              //不符合的loading
+                              node.setAttribute('src', '');  
+                          }
+                      
+                    });
+              
+                 
+             }else{
+                    elements1.forEach((node) => {
+                           
+                        node.setAttribute('transed', 'true');  
+                        const fancyboxEl = document.createElement('a');
+                        fancyboxEl.setAttribute('data-fancybox', 'responsive');
+                        fancyboxEl.setAttribute('data-src', node.getAttribute('data-src') || node.getAttribute('src'));
+                        $(node).wrap(fancyboxEl);
+                        node.setAttribute('isFancy', 'true');  
+                        
+                           node.setAttribute('loading' , 'eager');
+                            node.setAttribute('importantce' , 'medium');
+                        
+                    })
      
-     if(app.current.data.stream.progress>100-app.current.data.stream.percentScreenPost || app.current.data.stream.progress<app.current.data.stream.percentScreenPost){
+                 
+                 
+             }
+
+
+  
+     });//至此帖子内部的处理逻辑写完
+  
+
+    //--------------------------全局懒加载事件--------------------------
+
+     window.updateFancyboxLazyLoad=()=>{
+         if(!document.querySelector('.PostStream') )return;
+          if(!app.current.data.stream)return;
+         var selector='img:not([isfancy]):not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]):not([isFancy])'
          
-        let element2=document.querySelector(
-         '.PostStreamCurrent'
-        )
+         var elements1=Array.prototype.slice.call(document.querySelectorAll(
+         '.PostStream-item[data-index="'+Math.floor(app.current.data.stream.index-1) +'"] '+selector+','+
+            '.PostStream-item[data-index="'+(Math.floor(app.current.data.stream.index-1)-1)+'"] '+selector+','+
+            '.PostStream-item[data-index="'+(Math.floor(app.current.data.stream.index-1)+1) +'"] '+selector
+        ))
         
-        if(!element2)return
-        element2.className=element2.className.replaceAll('PostStreamCurrent','')
+      var elements2=Array.prototype.slice.call(document.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]), .editing img'))
+      
+         var elements3=Array.prototype.slice.call(document.querySelectorAll(
+         '.PostStream-item[data-index="'+Math.floor(app.current.data.stream.index-1) +'"] '
+        ))
+       elements1=elements1.filter((e) =>{
+        return (elements2.indexOf(e) == -1 )&&( elements3.indexOf(e) == -1 )
+
+        } )//排除不应该被加fancy的图片
+        elements3=elements3.filter((e) =>{
+        return elements2.indexOf(e) == -1 
+        } )//排除不应该被加fancy的图片
+        
+        
+        elements1.forEach((node) => {
+            
+                const fancyboxEl = document.createElement('a');
+                fancyboxEl.setAttribute('data-fancybox', 'responsive');
+                 node.setAttribute('src' , node.getAttribute('data-src').replace(/(\.jpg|\.png)$/i, '.medium$1'))
+
+                fancyboxEl.setAttribute('data-src', node.getAttribute('data-src') || node.getAttribute('src'));
+                $(node).wrap(fancyboxEl);
+                node.setAttribute('isFancy', 'true');  
+                
+        });
+         elements3.forEach((node) => {
+               node.setAttribute('loading' , 'eager');
+               node.setAttribute('importantce' , 'medium');
+        });
+
+        
+
      }
-     
-     
-
-    }
-
-        window.addEventListener('scroll', window.updateCatalogTop); 
-        window.addEventListener('touchmove', window.updateCatalogTop); 
-
-
-
-   window.updateCurrentPostClass=()=>{
-       
-         if(!app?.current?.data?.stream?.index)return;
-         
-         //自动关灯
-         let classList=document.querySelector(".DiscussionPage-discussion").className.split(' ');
-         
-       if(app?.current?.data?.stream?.index>1.2) {
-           
-           if(classList.indexOf('streamNotFirst')==-1)classList.push('streamNotFirst')
-       }else{
-           
-           classList=classList.filter((e)=>e!='streamNotFirst')
-       }
-       
-       document.querySelector(".DiscussionPage-discussion").className=classList.join(' ')
-       
-       //升级阅读进度
-         let element1=document.querySelector(
-         '.PostStream-item[data-index="'+Math.floor(app.current.data.stream.index-1) +'"]'
-        )
+    
+    
+      window.addEventListener('scroll', window.updateFancyboxLazyLoad); 
+    
         
-        app.current.data.stream.percentScreenPost = (window.innerHeight-100)/element1.scrollHeight*100-2;
-        app.current.data.stream.currentPostElement=element1;
- 
-        let element2=document.querySelector(
-         '.PostStreamCurrent'
-        )
-        if(element1==element2 || (!element1))return;
-        
-        
-        if(
-        element1.scrollHeight<window.innerHeight ||
-        app.current.data.stream.progress>100-app.current.data.stream.percentScreenPost || 
-        app.current.data.stream.progress<app.current.data.stream.percentScreenPost
-        ){
-            
-            //不需要进度条的帖子
-            if( !element2)return;
-            
-            element2.className=element2.className.replaceAll('PostStreamCurrent','')
-            
-        }else{
-      
-        
-             element1.className+=' PostStreamCurrent'
-            if(!element2)return;
-            element2.className=element2.className.replaceAll('PostStreamCurrent','')
-        
-        }
-     }
-      window.addEventListener('scroll',window.updateCurrentPostClass); 
-        window.addEventListener('touchmove', window.updateCurrentPostClass); 
-        
-        
-        
-    extend(CommentPost.prototype, 'actionItems', function (items) {
-        items.add(
-          'progress',
-          
-           <span></span>
-           
-          
-          ,10
-        );
-     });
   
   
+});
 
 
-  
-})
-  
-  

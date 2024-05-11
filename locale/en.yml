@@ -1,5 +1,12 @@
-tohsakarat-table-of-content:
+fancybox-plus:
+  ##
+  # UNIQUE KEYS - The following keys are used in only one location each.
+  ##
+
+  # Translations in this namespace are used by the admin interface.
   admin:
-  forum:
+    # These translations are used in the Settings page.
     settings:
-        copied: share link copy done(markdown)！
+      use-cdnUrl: Use CDN domain for local images
+      cdnURL: CDN domain (effective following the previous setting, replaces the original domain with a CDN domain to reduce server load)
+      use-resize: Use thumbnails before enlarging, requires nginx configuration, tutorial not yet complete, do not use for now if you are not sure
