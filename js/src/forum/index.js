@@ -192,16 +192,22 @@ app.initializers.add('tohsakarat-fancybox-plus', () => {
       var elements2=Array.prototype.slice.call(document.querySelectorAll(':is(blockquote,details,.bbspoiler-blur,.chatroom,.no-fancybox) img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview]), .editing img'))
       
          var elements3=Array.prototype.slice.call(document.querySelectorAll(
-         '.PostStream-item[data-index="'+Math.floor(app.current.data.stream.index-1) +'"] '
+         '.PostStream-item[data-index="'+Math.floor(app.current.data.stream.index-1) +'"] '+'img:not(.emoji):not(.Avatar):not(.flaemoji-customized):not([data-reaction]):not([data-link-preview])'
         ))
-       elements1=elements1.filter((e) =>{
-        return (elements2.indexOf(e) == -1 )&&( elements3.indexOf(e) == -1 )
-
-        } )//排除不应该被加fancy的图片
         elements3=elements3.filter((e) =>{
         return elements2.indexOf(e) == -1 
         } )//排除不应该被加fancy的图片
         
+        //console.log("elements3")
+      //  console.log(elements3)
+       elements1=elements1.filter((e) =>{
+        return (elements2.indexOf(e) == -1)
+        } )//排除不应该被加fancy的图片
+        
+       elements3.forEach((node) => {
+                           node.setAttribute('loading' , 'eager');
+                            node.setAttribute('importantce' , 'medium');
+        });
         
         elements1.forEach((node) => {
             
@@ -214,10 +220,7 @@ app.initializers.add('tohsakarat-fancybox-plus', () => {
                 node.setAttribute('isFancy', 'true');  
                 
         });
-         elements3.forEach((node) => {
-               node.setAttribute('loading' , 'eager');
-               node.setAttribute('importantce' , 'medium');
-        });
+
 
         
 

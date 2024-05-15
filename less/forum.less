@@ -86,8 +86,10 @@ a[data-fancybox]>img {
 }
 
 .Post-body span.fromBR + a[data-fancybox] ,.Post-body span.fromBR + img:not(.emoji) {
-    margin-bottom: -.2em !important;
-    display: block;
+
+    //margin-top: -1.3em !important;
+   // margin-bottom: -.2em !important;
+   display: block;
 }
 
 .Post-body :is(ul,ol) br + a[data-fancybox],.Post-body :is(ul,ol) br + img:not(.emoji) {
@@ -105,7 +107,8 @@ a[data-fancybox]:after {
     position: absolute;
     left:1em;
     transform: translate(0, -2em);
-    text-shadow: 0 0 5px white;
+
+    text-shadow: 0 0 5px var(--body-bg);
 
 }
 
@@ -136,3 +139,6 @@ a[data-fancybox]:after {
     display: none!important
 }
 
+.fancybox__slide {
+    backdrop-filter: blur(2px);
+}
